@@ -52,7 +52,37 @@ class ReadGeodata:
 					db=DB)
 		cur = db.cursor()
 		cur.execute("SELECT lat, lon FROM geodata WHERE asciiname LIKE '" + place_name + "' AND (lat BETWEEN 13.6 AND 44.5) AND (lon BETWEEN -164.6 AND -36.6)")
-		for row in cur.fetchall():
-			results.append(row)
+		matches = [r for r in cur.fetchall()]
 		db.close()
-		return results
+		return matches
+
+class ReadStoredData:
+
+	@staticmethod
+	def readTimes(t):
+		db =MySQLdb.connect(host='localhost',
+					user=USER,
+					passwd=PASS,
+					db=DB)
+		cur = db.cursor()
+		query = "SELECT starttime, total FROM pathdata WHERE %d BETWEEN starttime AND total" % t
+		cur.execute(query)
+		times = cur.fetchall()
+		db.close()
+		if len(times) > 0: return times[0]
+		else: return (0,0)
+
+	@staticmethod
+	def readMsgs((t1,t2)):
+		print t1,t2
+		results = list()
+		db = MySQLdb.connect(host='localhost',
+					user=USER,
+					passwd=PASS,
+					db=DB)
+		cur = db.cursor()
+		query = "SELECT id,location,tweet FROM twitter WHERE time BETWEEN %d AND %d" % (t1,t2)
+		cur.execute(query)
+		matches = [r for r in cur.fetchall()]
+		db.close()
+		return matches
