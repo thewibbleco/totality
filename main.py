@@ -13,8 +13,7 @@ auth = tweepy.OAuthHandler(keys['CONSUMER_KEY'],keys['CONSUMER_SECRET'])
 auth.set_access_token(keys['ACCESS_KEY'], keys['ACCESS_SECRET'])
 api = tweepy.API(auth)
 
-HASHTAGS = ['#Charlottesville']
-#HASHTAGS = ['#eclipse2017','#Eclipse2017','#ECLIPSE2017']
+HASHTAGS = ['#eclipse2017','#Eclipse2017','#ECLIPSE2017']
 
 class hashbot():
 
@@ -61,8 +60,7 @@ class processTweets(tweepy.StreamListener):
 			date = datetime.datetime.today().strftime('%Y%m%d')
                         with open('/root/totality/logs/'+str(date)+'log.txt','aw') as f:
                                 f.write(row+"\n")
-                except Exception as e:
-			print "ERROR WRITING TO LOG: %s" % str(e)
+                except Exception as e: pass
 
 if __name__=='__main__':
 	hashbot().start()
