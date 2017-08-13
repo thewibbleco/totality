@@ -8,6 +8,10 @@ with open('api/mysql.keys','rb') as f:
 USER = keys['USER']
 PASS = keys['PASSWORD']
 
+STATE_LIST = ['OR','MT','KS','IA','IL',
+		'TN','KY','NC','SC','MO',
+		'WY','GA','NE','ID']
+
 DB = 'totality'
 
 class WriteMessages:
@@ -35,42 +39,58 @@ class ReadLocations:
                      			passwd=PASS,
                      			db=DB)
 		cur = db.cursor()
-		query = "SELECT starttime,total FROM pathdata WHERE (%f BETWEEN slat AND nlat) AND (%f BETWEEN slon AND nlon)" % (lat, lon)
+		query = "SELECT zoneid, starttime, total FROM pathdata WHERE (nlat < %f AND %f < slat) AND (nlon > %f AND %f > slon)" % (lat, lat, lon, lon)
 		cur.execute(query)
-		match = [t for t in cur.fetchall()]
+		match = [t for t in cur.fetchall() if len(t) > 0]
 		db.close()
 		return match
 
 class ReadGeodata:
 
 	@staticmethod
-	def doSearch(place_name):
+	def doSearch(place):
+		place_name = place.split(',')[0]
+		state_name = place.split(',')[1].strip()
+		if state_name not in STATE_LIST: return []
 		results = list()
 		db = MySQLdb.connect(host='localhost',
 					user=USER,
 					passwd=PASS,
 					db=DB)
 		cur = db.cursor()
-		cur.execute("SELECT lat, lon FROM geodata WHERE asciiname LIKE '" + place_name + "' AND (lat BETWEEN 13.6 AND 44.5) AND (lon BETWEEN -164.6 AND -36.6)")
-		matches = [r for r in cur.fetchall()]
+		cur.execute("SELECT lat, lon FROM slim_geodata WHERE asciiname = '" + place_name + "' AND admin1code = '" + state_name + "'")
+		matches = cur.fetchall()
 		db.close()
 		return matches
 
 class ReadStoredData:
 
 	@staticmethod
-	def readTimes(t):
+	def getZone(t):
 		db =MySQLdb.connect(host='localhost',
 					user=USER,
 					passwd=PASS,
 					db=DB)
 		cur = db.cursor()
-		query = "SELECT starttime, total FROM pathdata WHERE %d BETWEEN starttime AND total" % t
+		query = "SELECT zone FROM pathdata WHERE %d BETWEEN starttime AND total" % t
 		cur.execute(query)
-		times = cur.fetchall()
+		zones = cur.fetchall()
 		db.close()
-		if len(times) > 0: return times[0]
-		else: return (0,0)
+		if len(times) > 0: return zones[0]
+		else: return 0
+
+	@staticmethod
+	def getWindow(zone):
+                db = MySQLdb.connect(host='localhost',
+                                        user=USER,
+                                        passwd=PASS,
+                                        db=DB)
+                cur = db.cursor()
+                query = "SELECT starttime,total FROM pathdata WHERE zone = " % (zone)
+                cur.execute(query)
+                matches = cur.fetchall()
+                db.close()
+
 
 	@staticmethod
 	def readMsgs((t1,t2)):

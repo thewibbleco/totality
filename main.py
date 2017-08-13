@@ -2,8 +2,9 @@ import datetime
 import json
 import traceback
 import tweepy
+import rw
 import sys
-from db import WriteMessages
+from db import ReadGeodata, WriteMessages
 
 with open('api/api.keys','rb') as f:
 	keys = json.loads(f.read())
@@ -12,7 +13,7 @@ auth = tweepy.OAuthHandler(keys['CONSUMER_KEY'],keys['CONSUMER_SECRET'])
 auth.set_access_token(keys['ACCESS_KEY'], keys['ACCESS_SECRET'])
 api = tweepy.API(auth)
 
-HASHTAGS = ['#SongsWithLowSelfEsteem']
+HASHTAGS = ['#Charlottesville']
 #HASHTAGS = ['#eclipse2017','#Eclipse2017','#ECLIPSE2017']
 
 class hashbot():
@@ -21,29 +22,36 @@ class hashbot():
                 try:
                         tweepy.streamListener = processTweets()
                         twitterStream = tweepy.Stream(auth,listener=processTweets())
-                        twitterStream.filter(track=HASHTAGS)
+                        twitterStream.filter(track=HASHTAGS, async=True)
                 except tweepy.TweepError as t:
                         print t
 
 class processTweets(tweepy.StreamListener):
 
         def on_data(self,data):
+		now = rw.getUTC()
                 decoded = json.loads(data)
-                if decoded['text']:
-			message = decoded['text'].encode('utf-8')
-			time = decoded['timestamp_ms']
-			try:
-				self.update_db(decoded['id'],
-						time,
-						decoded['user']['location'].encode('utf-8'),
-						message)
-				self.update_log(message)
-			except UnicodeDecodeError as e: print traceback.print_tb(sys.exc_info()[2])
-			except Exception as e: pass #print traceback.print_tb(sys.exc_info()[2])
-			finally: pass
+                try:
+			if decoded['user']['location'] and not decoded['retweeted']:
+				id = decoded['id']
+				location = decoded['user']['location'].encode('utf-8')
+				message = decoded['text'].encode('utf-8')
+				time = int(decoded['timestamp_ms'])/1000
+				geo = ReadGeodata().doSearch(location)
+				zone = rw.getZones(geo)
+				zones = set([z[0] for z in zone])
+				for item in zones: zid, t1, t2 = item
+				if zid: print t1, t2, now, zid
+				if t1 < now < t2:
+					self.update_db(id,
+						        time,
+				       			location,
+						        message)
+					self.update_log(message)
+		except Exception as e: pass
 
         def on_error(self,status):
-                return false
+                return True
 
 	def update_db(self,id,t,loc,msg):
 		WriteMessages().doAdd([id,t,loc,msg])

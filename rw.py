@@ -12,22 +12,15 @@ def getUTC():
 def getWindow():
 	now = getUTC()
 	window = ReadStoredData().readTimes(now)
-	if window: msgs = ReadStoredData().readMsgs(window)
+	return window
 
-	#try:
-                        #       if decoded['user']['location']:
-                        #               city = decoded['user']['location'].split(',')[0].strip()
-                        #               state = decoded['user']['location'].split(',')[1].strip()
-                        #               locs = ReadGeodata().doSearch(city)
-                        #except: pass
-                        #try:
-                        #       match = _POOL.map(ReadLocations().doSearch,locs)
-                        #       if match:
-                        #               self.update_db(decoded['id'],
-                        #                               time,
-                        #                               decoded['user']['location'].encode('utf-8'),
-                        #                               message)
-                        #               self.update_log(message)
+def getMsgs(window):
+	msgs = ReadStoredData().readMsgs(window)
+	return msgs
+
+def getZones(geo):
+	match = _POOL.map(ReadLocations().doSearch,geo)
+	return match
 
 def _reduce_method(m):
         if m.im_self is None:
@@ -35,5 +28,7 @@ def _reduce_method(m):
         else:
                 return getattr, (m.im_self, m.im_func.func_name)
 
-copy_reg.pickle(type(ReadLocations.doSearch), _reduce_method)
+copy_reg.pickle(type(ReadLocations().doSearch), _reduce_method)
 
+if __name__ == '__main__':
+	pass
