@@ -2,7 +2,7 @@ import json
 import MySQLdb
 import re
 
-with open('api/mysql.keys','rb') as f:
+with open('/root/totality/api/mysql.keys','rb') as f:
         keys = json.loads(f.read())
 
 USER = keys['USER']

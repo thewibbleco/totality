@@ -6,7 +6,7 @@ import rw
 import sys
 from db import ReadGeodata, WriteMessages
 
-with open('api/api.keys','rb') as f:
+with open('/root/totality/api/api.keys','rb') as f:
 	keys = json.loads(f.read())
 
 auth = tweepy.OAuthHandler(keys['CONSUMER_KEY'],keys['CONSUMER_SECRET'])
