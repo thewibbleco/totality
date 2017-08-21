@@ -43,7 +43,8 @@ class processTweets(tweepy.StreamListener):
                 decoded = json.loads(data)
                 try:
 			if decoded['user']['location'] and not decoded['retweeted'] and not decoded['text'].startswith('RT'):
-				id = decoded['id']
+				id = decoded['id_str']
+				user = decoded['user']['screen_name']
 				location = decoded['user']['location'].encode('utf-8')
 				message = decoded['text'].encode('utf-8')
 				time = int(decoded['timestamp_ms'])/1000
@@ -67,6 +68,7 @@ class processTweets(tweepy.StreamListener):
 				       			location,
 						        message)
 					self.update_log(id,
+							 user,
 							 zid,
 							 time,
 							 location,
@@ -79,9 +81,9 @@ class processTweets(tweepy.StreamListener):
 	def update_db(self,id,t,loc,msg):
 		WriteMessages().doAdd([id,t,loc,msg])
 
-        def update_log(self,id,zid,time,location,message):
+        def update_log(self,id,user,zid,time,location,message):
                 try:
-			item = {"t_id":id,"data":{"z_id":zid,"t":time,"loc":location,"msg":message}}
+			item = {"t_id":id,"data":{"z_id":zid,"t":time,"loc":location,"msg":message,"user":user}}
 			jsons.append(item)
 			#date = datetime.datetime.today().strftime('%Y%m%d%h%M%s')
                         with open('/var/www/html/log/00-eclipse.txt','w') as f:

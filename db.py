@@ -46,7 +46,7 @@ class ReadLocations:
                      			passwd=PASS,
                      			db=DB)
 		cur = db.cursor()
-		query = "SELECT zoneid, starttime, total FROM pathdata_test WHERE (nlat < %f AND %f < slat) AND (nlon > %f AND %f > slon)" % (lat, lat, lon-_delta, lon)
+		query = "SELECT zoneid, starttime, total FROM pathdata WHERE (nlat < %f AND %f < slat) AND (nlon > %f AND %f > slon)" % (lat+_delta, lat, lon-_delta, lon)
 		cur.execute(query)
 		match = [t for t in cur.fetchall() if len(t) > 0]
 		db.close()
@@ -104,7 +104,7 @@ class ReadStoredData:
 					passwd=PASS,
 					db=DB)
 		cur = db.cursor()
-		query = "SELECT zone FROM pathdata_test WHERE %d BETWEEN starttime AND total" % t
+		query = "SELECT zone FROM pathdata WHERE %d BETWEEN starttime AND total" % t
 		cur.execute(query)
 		zones = cur.fetchall()
 		db.close()
